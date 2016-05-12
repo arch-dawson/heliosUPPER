@@ -1,14 +1,14 @@
 #*********************************************************#
-#   COSGC Presents										  #
-#      __  __________    ________  _____    _____    __   #
+#   COSGC Presents					  #
+#      __  __________    ________  _____  _    __   #
 #     / / / / ____/ /   /  _/ __ \/ ___/   /  _/ |  / /   #
 #    / /_/ / __/ / /    / // / / /\__ \    / / | | / /    #
 #   / __  / /___/ /____/ // /_/ /___/ /  _/ /  | |/ /     #
 #  /_/ /_/_____/_____/___/\____//____/  /___/  |___/      #
 #                                                         #
-#   													  #
+#   							  #
 #  Copyright (c) 2015 University of Colorado Boulder	  #
-#  COSGC HASP Helios IV Team							  #
+#  COSGC HASP Helios IV Team				  #
 #*********************************************************#
 
 
@@ -32,27 +32,24 @@ from serv import serv
 # Directory for all code shared between threads
 from shared import easyserial
 
-print("Testing if main gets to this point")
-
 # Create required Queues
 capt_cmd = queue.Queue()
 star_cmd = queue.Queue()
-inputQ = queue.Queue()
-outputQ = queue.Queue()
+input = queue.Queue()
+output = queue.Queue()
+
 
 # Package arg tuples for thread
-
 #capt_args = (capt_cmd, cameras)
 star_args = (star_cmd)
-inpt_args = (inputQ,None)
-oupt_args = (outputQ, None)
-serv_args = (inputQ, outputQ)
-
+inpt_args = (input,None)
+oupt_args = (output, None)
+serv_args = (input, output)
 # Create thread objects
 threads = [
     	#threading.Thread(name='capt', target= capt.main),
 	#threading.Thread(name='star', target= star.main),
-	threading.Thread(name='inpt', target = inpt.test,args=inpt_args),
+	threading.Thread(name='inpt', target = inpt.main, args=inpt_args),
    	threading.Thread(name='oupt', target = oupt.main, args=oupt_args),
 	threading.Thread(name='serv', target = serv.main, args=serv_args),
 ]

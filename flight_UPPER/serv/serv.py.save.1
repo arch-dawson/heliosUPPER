@@ -1,6 +1,6 @@
 import socket
+
 import re
-import os
 
 TCP_IP='192.168.1.230'
 TCP_PORT= 8080
@@ -18,27 +18,21 @@ def main(inputQ,outputQ):
 
 	tempRe = re.compile('temp')
 	
-	cpuRe = re.compile('cpu')
-	
-	#diskRe = re.compile('disk')
+
+testTemp = "37"
 
 	print('Connection address:', addr)
 	while True:
 		#Attempts to get data from connection, if successful adds to input queue	
 		data=conn.recv(BUFFER_SIZE).decode()
-		data=data.lower()
 		if len(data) > 0:
 			inputQ.put(data)
 		if not inputQ.empty():
 			recieved = inputQ.get()
 			if tempRe.search(recieved):
-				output = os.popen('vcgencmd measure_temp').readline()
-				outputQ.put(output)
-			elif cpuRe.search(recieved):
-				out = str(os.popen("top -n1 | awk '/Cpu\(s\):/ {print $2}'").readline().strip())
-				outputQ.put(out+"%")
+				outputQ.put(testTemp)
 			else:
-				outputQ.put("error")
+				outputQ.put(recieved)
 			print("Recieved data: ", recieved)
 		#if not data: break
 		
