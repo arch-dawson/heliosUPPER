@@ -25,36 +25,25 @@ def shutdown():
 # Import code for threading. All flight code must be initialized from the main function in the thread file
 #from capt import capt
 #from star import star
-from inpt import inpt
-from oupt import oupt
-from serv import serv
+from clnt import clnt
 
 # Directory for all code shared between threads
 from shared import easyserial
 
-print("Testing if main gets to this point")
-
 # Create required Queues
 capt_cmd = queue.Queue()
 star_cmd = queue.Queue()
-inputQ = queue.Queue()
-outputQ = queue.Queue()
 
 # Package arg tuples for thread
 
 #capt_args = (capt_cmd, cameras)
-star_args = (star_cmd)
-inpt_args = (inputQ,None)
-oupt_args = (outputQ, None)
-serv_args = (inputQ, outputQ)
+#star_args = (star_cmd)
 
 # Create thread objects
 threads = [
     	#threading.Thread(name='capt', target= capt.main),
 	#threading.Thread(name='star', target= star.main),
-	threading.Thread(name='inpt', target = inpt.test,args=inpt_args),
-   	threading.Thread(name='oupt', target = oupt.main, args=oupt_args),
-	threading.Thread(name='serv', target = serv.main, args=serv_args),
+	threading.Thread(name='clnt', target = clnt.main),
 ]
 # Start running threads within a try-except block to allow for it to catch exceptions
 try:
