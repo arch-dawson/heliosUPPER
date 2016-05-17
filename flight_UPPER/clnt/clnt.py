@@ -31,7 +31,7 @@ def main(inputQ,outputQ):
 
 	pingRe = re.compile('ping')
 	
-	#diskRe = re.compile('disk')
+	diskRe = re.compile('disk')
 
 	print('Connection address:', addr)
 	while True:
@@ -51,6 +51,9 @@ def main(inputQ,outputQ):
 			elif rebootRe.search(recieved):
 				conn.send('Rebooting upper now'.encode())
 				restart()
+			elif diskRe.search(recieved):
+				p=os.popen("df -h /")
+				outputQ.put('\n' + p.readline(0 + p.readline())_
 			elif pingRe.search(recieved):
 				outputQ.put('RECIEVED COMMUNICATION')
 			else:
