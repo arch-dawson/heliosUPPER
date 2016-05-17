@@ -33,17 +33,21 @@ from shared import easyserial
 # Create required Queues
 capt_cmd = queue.Queue()
 star_cmd = queue.Queue()
+inputQ = queue.Queue()
+outputQ = queue.Queue()
+
 
 # Package arg tuples for thread
 
 #capt_args = (capt_cmd, cameras)
 #star_args = (star_cmd)
+clnt_args = (inputQ, outputQ)
 
 # Create thread objects
 threads = [
     	#threading.Thread(name='capt', target= capt.main),
 	#threading.Thread(name='star', target= star.main),
-	threading.Thread(name='clnt', target = clnt.main),
+	threading.Thread(name='clnt', target = clnt.main, args=clnt_args),
 ]
 # Start running threads within a try-except block to allow for it to catch exceptions
 try:

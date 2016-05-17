@@ -16,12 +16,7 @@ def restart():
 def main(inputQ,outputQ):
 	s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	
-	# Uncomment this line when actually running
-	s.bind((TCP_IP, TCP_PORT))
-
-	s.listen(1)
-
-	conn, addr = s.accept()
+	s.connect((TCP_IP, TCP_PORT))
 
 	tempRe = re.compile('temp')
 	
@@ -33,10 +28,9 @@ def main(inputQ,outputQ):
 	
 	diskRe = re.compile('disk')
 
-	print('Connection address:', addr)
 	while True:
 		#Attempts to get data from connection, if successful adds to input queue	
-		data=conn.recv(BUFFER_SIZE).decode()
+		data=s.recv(BUFFER_SIZE).decode()
 		data=data.lower()
 		if len(data) > 0:
 			inputQ.put(data)
@@ -49,11 +43,11 @@ def main(inputQ,outputQ):
 				out = str(os.popen("top -n1 | awk '/Cpu\(s\):/ {print $2}'").readline().strip())
 				outputQ.put(out+"%")
 			elif rebootRe.search(recieved):
-				conn.send('Rebooting upper now'.encode())
+				s.send('Rebooting upper now'.encode())
 				restart()
 			elif diskRe.search(recieved):
 				p=os.popen("df -h /")
-				outputQ.put('\n' + p.readline(0 + p.readline())_
+				outputQ.put('\n' + p.readline() + p.readline())
 			elif pingRe.search(recieved):
 				outputQ.put('RECIEVED COMMUNICATION')
 			else:
@@ -65,9 +59,9 @@ def main(inputQ,outputQ):
 		if (outputQ.empty() == False):
 		# Gets first item from output queue and sends to lower Pi	
 			message = outputQ.get()
-			conn.send(message.encode())
+			s.send(message.encode())
 #	if not data: break
 #	print('recieved data:', data)
 			#conn.send(data.encode())
-	conn.close()
+	s.close()
 	return 0
