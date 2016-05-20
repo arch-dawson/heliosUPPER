@@ -36,7 +36,6 @@ def main(inputQ,outputQ):
 			inputQ.put(data)
 		if not inputQ.empty():
 			recieved = inputQ.get()
-			print(recieved)
 			if tempRe.search(recieved):
 				output = os.popen('vcgencmd measure_temp').readline()
 				outputQ.put(output)
