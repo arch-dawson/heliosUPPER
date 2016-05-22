@@ -23,9 +23,10 @@ import random
 capture_code = "/home/pi/heliosUPPER/flight_UPPER/capt/a.out"
 ## Command line argument to change exposure will have to be included here
 
-class Cameras():
+class Cameras:
 	
-	def __init__(self):
+	def __init__(self,toLowerQ):
+		self.toLowerQ = toLowerQ
 		subprocess.call([capture_code, "-t"])
 		#logging.info("Initialized capture code")
 		#print("successfully ran test")
@@ -35,11 +36,16 @@ class Cameras():
 	
 	def science(self):
 		# Captures a science and an adcs image, naming them with the "Camera_hr-min-sec.png" convention 
-		t = time.gmtime()
+		#t = time.gmtime()
+		t = str(time.time())
 		#adcs_name = "/home/pi/hasp_temp/flight/images/ADCS_" + str(t[3]) + "-" + str(t[4]) + "-" + str(t[5]) + ".png"
-		sci_name = "/home/pi/heliosUPPER/flight_UPPER/capt/images/SCI_" +  str(random.randint(0, 2**32)) + ".png"
+		#sci_name = "/home/pi/heliosUPPER/flight_UPPER/capt/images/SCI_" +  str(random.randint(0, 2**32)) + ".png"
+		sci_name = "/home/pi/heliosUPPER/flight_UPPER/capt/images/SCI_" + t + ".png" 
 		with self.lock:
 			subprocess.call([capture_code, "-d", self.sci_path, "-o", sci_name])
 			#subprocess.call([capture_code, "-d", self.adcs_path, "-o", adcs_name])
 		#logging.info("Captured " + sci_name)
+		threading.Timer(10,science(self)).start()
+		self.toLowerQ.put("Took Science picture with timestamp: " + t)
+		print("Took science picture with timestamp: " + t)
 		return sci_name

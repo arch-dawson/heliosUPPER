@@ -1,9 +1,10 @@
 import time
 import queue
-from capture import Cameras
+from capt import capture
 
-def main(cameras):
-	print("working")
+def main(toLowerQ):
+	print("Initializing Science Camera")
+	camera = Cameras(toLowerQ)
 	# Initialize initial photo capture rate
 	rate = 3;
 	#while True:
@@ -20,6 +21,3 @@ def main(cameras):
 		# Sleep for time equal to rate
 		#time.sleep(rate)
 
-
-cameras = Cameras()		
-main(cameras)

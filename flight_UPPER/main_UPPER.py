@@ -23,7 +23,7 @@ def shutdown():
     exit()
 
 # Import code for threading. All flight code must be initialized from the main function in the thread file
-#from capt import capt
+from capt import capt
 #from star import star
 from clnt import clnt
 
@@ -33,19 +33,18 @@ from shared import easyserial
 # Create required Queues
 capt_cmd = queue.Queue()
 star_cmd = queue.Queue()
-inputQ = queue.Queue()
-outputQ = queue.Queue()
+toLowerQ = queue.Queue()
 
 
 # Package arg tuples for thread
 
-#capt_args = (capt_cmd, cameras)
+capt_args = (toLowerQ,) # Leave the comma! Comma makes it a tuple
 #star_args = (star_cmd)
-clnt_args = (inputQ, outputQ)
+clnt_args = (toLowerQ,)
 
 # Create thread objects
 threads = [
-    	#threading.Thread(name='capt', target= capt.main),
+    	threading.Thread(name='capt', target= capt.main, args=capt_args),
 	#threading.Thread(name='star', target= star.main),
 	threading.Thread(name='clnt', target = clnt.main, args=clnt_args),
 ]
