@@ -20,8 +20,7 @@ import subprocess
 
 capture_code = "/home/pi/heliosUPPER/flight_UPPER/capt/a.out"
 
-class Cameras:
-	
+class Cameras:	
 	def __init__(self,toLowerQ):
 		self.toLowerQ = toLowerQ
 		subprocess.call([capture_code, "-t"])
@@ -42,16 +41,18 @@ class Cameras:
 			subprocess.call([capture_code, "-d", self.sci_path, "-o", sci_name])
 			#subprocess.call([capture_code, "-d", self.adcs_path, "-o", adcs_name])
 		#logging.info("Captured " + sci_name)
-		threading.Timer(10,science(self)).start()
+		#threading.Timer(10,science(self)).start()
 		self.toLowerQ.put("Took Science picture with timestamp: " + t)
 		print("Took science picture with timestamp: " + t)
-		return sci_name
+		return #sci_name
 
 def main(toLowerQ):
 	print("Initializing Science Camera")
 	camera = Cameras(toLowerQ)
 	# Initialize initial photo capture rate
-	rate = 3; #PASS RATE TO CAMERAS AS WELL
+	rate = 10; 
 
-	cameras.science()
+	while(True):
+		camera.science()
+		time.sleep(rate)
 
