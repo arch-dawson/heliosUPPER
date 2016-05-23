@@ -112,8 +112,9 @@ static void process_image(buffer buf){
 	png_init_io(image, file);
 	png_set_compression_level(image, Z_BEST_SPEED);
 	
-	png_set_IHDR(image, info, width, height, 8, PNG_COLOR_TYPE_GRAY, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+	png_set_IHDR(image, info, width, height, 12, PNG_COLOR_TYPE_GRAY, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 	//png_set_gAMA(image, info, 1.0); //gamma!
+	// If everything breaks it was Bekah's fault.  Change the 12 above back to 8
 	
 	png_byte **rows = NULL;
 	
