@@ -36,7 +36,8 @@ class Cameras:
 		t = str(time.time())
 		#adcs_name = "/home/pi/hasp_temp/flight/images/ADCS_" + str(t[3]) + "-" + str(t[4]) + "-" + str(t[5]) + ".png"
 		#sci_name = "/home/pi/heliosUPPER/flight_UPPER/capt/images/SCI_" +  str(random.randint(0, 2**32)) + ".png"
-		sci_name = "/home/pi/heliosUPPER/flight_UPPER/capt/images/SCI_" + t + ".png" 
+		#sci_name = "/home/pi/heliosUPPER/flight_UPPER/capt/images/SCI_" + t + ".png" 
+		sci_name = "/home/pi/heliosUPPER/flight_UPPER/capt/images/SCI_" + t + ".raw"
 		with self.lock:
 			subprocess.call([capture_code, "-d", self.sci_path, "-o", sci_name])
 			#subprocess.call([capture_code, "-d", self.adcs_path, "-o", adcs_name])
