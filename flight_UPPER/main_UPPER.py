@@ -22,6 +22,9 @@ def shutdown():
     """ Completes all necessary events for a shutdown """
     exit()
 
+# Set default rate
+rate = 2
+
 # Import code for threading. All flight code must be initialized from the main function in the thread file
 from capt import capt
 #from star import star

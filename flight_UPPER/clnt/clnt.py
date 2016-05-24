@@ -57,10 +57,10 @@ def main(toLowerQ,rate):
 				toLowerQ.put('\n' + p.readline() + p.readline())
 			elif pingRe.search(recieved):
 				toLowerQ.put('RECIEVED COMMUNICATION')
-			elif fasterRe.search(recieved)
-				rate = 3
-			elif slowerRe.search(recieved)
-				rate = 10
+			elif fasterRe.search(recieved):
+				rate = 2
+			elif slowerRe.search(recieved):
+				rate = 5
 			else:
 				toLowerQ.put("error")
 			print("Recieved data: ", recieved)
