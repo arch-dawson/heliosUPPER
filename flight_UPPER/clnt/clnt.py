@@ -59,8 +59,10 @@ def main(toLowerQ,rate):
 				toLowerQ.put('RECIEVED COMMUNICATION')
 			elif fasterRe.search(recieved):
 				rate = 2
+				toLowerQ.put('Changed pic rate to 2 seconds')
 			elif slowerRe.search(recieved):
 				rate = 5
+				toLowerQ.put('Changed pic rate to 5 seconds')
 			else:
 				toLowerQ.put("error")
 			print("Recieved data: ", recieved)
