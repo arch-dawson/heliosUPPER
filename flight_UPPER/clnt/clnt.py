@@ -59,8 +59,10 @@ def main(toLowerQ,capt_cmd):
 				toLowerQ.put('RECIEVED COMMUNICATION')
 			elif fasterRe.search(recieved):
 				capt_cmd.put(2)
+				toLowerQ.put("Changed rate to 2")
 			elif slowerRe.search(recieved):
 				capt_cmd.put(5)
+				toLowerQ.put("Changed rate to 5")
 			else:
 				toLowerQ.put("error")
 			print("Recieved data: ", recieved)
