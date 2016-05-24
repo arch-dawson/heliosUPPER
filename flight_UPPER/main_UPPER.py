@@ -38,9 +38,9 @@ toLowerQ = queue.Queue()
 
 # Package arg tuples for thread
 
-capt_args = (toLowerQ,) # Leave the comma! Comma makes it a tuple
+capt_args = (toLowerQ,rate) # Leave the comma! Comma makes it a tuple
 #star_args = (star_cmd)
-clnt_args = (toLowerQ,)
+clnt_args = (toLowerQ,rate)
 
 # Create thread objects
 threads = [

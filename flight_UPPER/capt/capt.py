@@ -23,11 +23,12 @@ capture_code = "/home/pi/heliosUPPER/flight_UPPER/capt/a.out"
 class Cameras:	
 	def __init__(self,toLowerQ):
 		self.toLowerQ = toLowerQ
-		subprocess.call([capture_code, "-t"])
+		#subprocess.call([capture_code, "-t"])
 		#logging.info("Initialized capture code")
 		#print("successfully ran test")
 		#self.adcs_path = "/dev/v4l/by-id/..."		#Paths need to be completed
-		self.sci_path = "/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DMK_23U274_17510268-video-index0"		
+		#self.sci_path = "/dev/v4l/by-id/usb-The_Imaging_Source_Europe_GmbH_DMK_23U274_17510268-video-index0"		
+		subprocess.call(["v4l2-ctl", "--set-fmt-video=width=1600,height=1200,pixelformat='Y16 '"])
 		self.lock = threading.Lock()
 	
 	def science(self):
@@ -37,9 +38,12 @@ class Cameras:
 		#adcs_name = "/home/pi/hasp_temp/flight/images/ADCS_" + str(t[3]) + "-" + str(t[4]) + "-" + str(t[5]) + ".png"
 		#sci_name = "/home/pi/heliosUPPER/flight_UPPER/capt/images/SCI_" +  str(random.randint(0, 2**32)) + ".png"
 		#sci_name = "/home/pi/heliosUPPER/flight_UPPER/capt/images/SCI_" + t + ".png" 
-		sci_name = "/home/pi/heliosUPPER/flight_UPPER/capt/images/SCI_" + t + ".raw"
+		sci_name = "--stream-mmap=3 --stream-count=1 --stream-to=/home/pi/heliosUPPER/flight_UPPER/capt/images/SCI_" + t + ".jpg"
+		v4l2-ctl --stream-mmap=3 --stream-count=1 --stream-to=SUCCESS.jpg
 		with self.lock:
-			subprocess.call([capture_code, "-d", self.sci_path, "-o", sci_name])
+			subprocess.call(["v4l2-ctl", sci_name])
+		#with self.lock:
+			#subprocess.call([capture_code, "-d", self.sci_path, "-o", sci_name])
 			#subprocess.call([capture_code, "-d", self.adcs_path, "-o", adcs_name])
 		#logging.info("Captured " + sci_name)
 		#threading.Timer(10,science(self)).start()
@@ -47,11 +51,11 @@ class Cameras:
 		print("Took science picture with timestamp: " + t)
 		return #sci_name
 
-def main(toLowerQ):
+def main(toLowerQ,rate):
 	print("Initializing Science Camera")
 	camera = Cameras(toLowerQ)
 	# Initialize initial photo capture rate
-	rate = 10; 
+	#rate = 10; 
 
 	while(True):
 		camera.science()
