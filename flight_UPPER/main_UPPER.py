@@ -22,9 +22,6 @@ def shutdown():
     """ Completes all necessary events for a shutdown """
     exit()
 
-# Set default rate
-rate = 2
-
 # Import code for threading. All flight code must be initialized from the main function in the thread file
 from capt import capt
 #from star import star
@@ -35,20 +32,17 @@ from shared import easyserial
 
 # Create required Queues
 capt_cmd = queue.Queue()
-star_cmd = queue.Queue()
 toLowerQ = queue.Queue()
 
 
 # Package arg tuples for thread
 
-capt_args = (toLowerQ,rate) # Leave the comma! Comma makes it a tuple
-#star_args = (star_cmd)
-clnt_args = (toLowerQ,rate)
+capt_args = (toLowerQ,capt_cmd) # Leave the comma! Comma makes it a tuple
+clnt_args = (toLowerQ,capt_cmd)
 
 # Create thread objects
 threads = [
     	threading.Thread(name='capt', target= capt.main, args=capt_args),
-	#threading.Thread(name='star', target= star.main),
 	threading.Thread(name='clnt', target = clnt.main, args=clnt_args),
 ]
 # Start running threads within a try-except block to allow for it to catch exceptions

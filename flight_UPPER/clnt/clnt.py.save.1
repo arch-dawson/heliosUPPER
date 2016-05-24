@@ -16,7 +16,7 @@ def restart():
 	command = "/usr/bin/sudo /sbin/shutdown -r now"
 	process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
 
-def main(toLowerQ,capt_cmd):
+def main(toLowerQ,rate):
 	s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	
 	s.connect((TCP_IP, TCP_PORT))
@@ -39,6 +39,9 @@ def main(toLowerQ,capt_cmd):
 		#Attempts to get data from connection, if successful adds to input queue	
 		data=s.recv(BUFFER_SIZE).decode()
 		data=data.lower()
+		#if it breaks, remove the line below this
+		
+
 		if len(data) > 0:
 			inputQ.put(data)
 		if not inputQ.empty():
@@ -58,9 +61,9 @@ def main(toLowerQ,capt_cmd):
 			elif pingRe.search(recieved):
 				toLowerQ.put('RECIEVED COMMUNICATION')
 			elif fasterRe.search(recieved):
-				capt_cmd.put(2)
+				rate = 2
 			elif slowerRe.search(recieved):
-				capt_cmd.put(5)
+				rate = 5
 			else:
 				toLowerQ.put("error")
 			print("Recieved data: ", recieved)
