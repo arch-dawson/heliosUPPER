@@ -34,7 +34,7 @@ class Cameras:
 		#sci_name = "--stream-to=/home/pi/heliosUPPER/flight_UPPER/capt/images/SCI_" + t + ".jpg"
 		with self.lock:
 			subprocess.call(shlex.split(pic_cmd))
-		self.toLowerQ.put("Took Science picture with timestamp: " + t)
+		#self.toLowerQ.put("Took Science picture with timestamp: " + t)
 		print("Took science picture with timestamp: " + t)
 		return 
 
