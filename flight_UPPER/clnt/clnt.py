@@ -44,6 +44,8 @@ def main(toLowerQ,capt_cmd):
 
 	slowerRe = re.compile('slower')
 
+	imageRe = re.compile('image')
+
 	while True:
 		#Attempts to get data from connection, if successful adds to input queue	
 		data=s.recv(BUFFER_SIZE).decode()
@@ -72,6 +74,8 @@ def main(toLowerQ,capt_cmd):
 			elif slowerRe.search(recieved):
 				capt_cmd.put(5)
 				toLowerQ.put("     Changed rate to 5")
+			elif imageRe.search(recieved):
+				capt_cmd.put('images')
 			else:
 				toLowerQ.put("     error")
 			print("Recieved data: ", recieved)
