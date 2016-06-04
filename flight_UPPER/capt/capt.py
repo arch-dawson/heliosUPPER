@@ -19,6 +19,10 @@ import os.path as path
 import shlex
 from subprocess import Popen, PIPE
 import subprocess
+import re
+
+
+imagesRe = re.compile('images')
 
 class Cameras:	
 	def __init__(self,toLowerQ):
@@ -62,10 +66,9 @@ def main(toLowerQ,capt_cmd):
 	while(True):
 		if not capt_cmd.empty():
 			cmd = capt_cmd.get()
-			if 'images' in cmd:
-				camera.downlinkData()
-			else:
+			if isinstance(cmd, int):
 				rate = cmd
+			elif imagesRe.search(cmd):
+				camera.downlinkData()
 		camera.science()
 		time.sleep(rate)
-
