@@ -34,11 +34,14 @@ from shared import easyserial
 capt_cmd = queue.Queue()
 toLowerQ = queue.Queue()
 
+# Night mode affects the upper and lower, so we have an equivalent
+# flag here that should update at the same time.
+nightMode = threading.Event()
 
 # Package arg tuples for thread
 
-capt_args = (toLowerQ,capt_cmd) # Leave the comma! Comma makes it a tuple
-clnt_args = (toLowerQ,capt_cmd)
+capt_args = (toLowerQ,capt_cmd,nightMode) # Leave the comma! Comma makes it a tuple
+clnt_args = (toLowerQ,capt_cmd,nightMode)
 
 # Create thread objects
 threads = [

@@ -56,7 +56,7 @@ class Cameras:
 		
 		
 
-def main(toLowerQ,capt_cmd):
+def main(toLowerQ,capt_cmd, nightMode):
 	print("Initializing Science Camera")
 	camera = Cameras(toLowerQ)
 
@@ -70,5 +70,6 @@ def main(toLowerQ,capt_cmd):
 				rate = cmd
 			elif imagesRe.search(cmd):
 				camera.downlinkData()
-		camera.science()
+		if not nightMode.is_set():
+                        camera.science()
 		time.sleep(rate)

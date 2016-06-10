@@ -17,7 +17,7 @@ def restart():
 	command = "/usr/bin/sudo /sbin/shutdown -r now"
 	process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
 
-def main(toLowerQ,capt_cmd):
+def main(toLowerQ,capt_cmd, nightMode):
 	time.sleep(75)
 	
 	print("Trying to connect to Lover Pi")
@@ -45,6 +45,8 @@ def main(toLowerQ,capt_cmd):
 	slowerRe = re.compile('slower')
 
 	imageRe = re.compile('image')
+
+	nightRe = re.compile('night')
 
 	while True:
 		#Attempts to get data from connection, if successful adds to input queue	
@@ -76,6 +78,13 @@ def main(toLowerQ,capt_cmd):
 				toLowerQ.put("     Changed rate to 5")
 			elif imageRe.search(recieved):
 				capt_cmd.put('images')
+			elif nightRe.search(received): # Toggles night mode
+                                if nightMode.is_set():
+                                        nightMode.clear()
+                                        toLowerQ.put("     Turned Upper Pi night mode OFF")
+                                else:
+                                        nightMode.set()
+                                        toLowerQ.put("     Turned Upper Pi night mode ON")
 			else:
 				toLowerQ.put("     error")
 			print("Recieved data: ", recieved)
