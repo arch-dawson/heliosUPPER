@@ -37,7 +37,7 @@ class Cameras:
 	
 	def science(self):
 		t = str(time.time())
-		pic_cmd = "v4l2-ctl --stream-mmap=3 --stream-count=1 --stream-to=/home/pi/heliosUPPER/flight_UPPER/capt/images/SCI_" + t + ".jpg"
+		pic_cmd = "v4l2-ctl --stream-mmap=3 --stream-count=1 --stream-to=/home/pi/heliosUPPER/flight_UPPER/capt/images/SCI_" + t + ".raw" #.jpg
 		with self.lock:
 			subprocess.call(shlex.split(pic_cmd))
 		result, err = Popen("ls /home/pi/heliosUPPER/flight_UPPER/capt/images/*.jpg | grep %s" % t, stdout=PIPE, shell=True).communicate()
