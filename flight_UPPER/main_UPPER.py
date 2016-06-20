@@ -24,29 +24,34 @@ def shutdown():
 
 # Import code for threading. All flight code must be initialized from the main function in the thread file
 from capt import capt
-#from star import star
 from clnt import clnt
 
 # Directory for all code shared between threads
+# Not actually used in all threads though, just in clnt to run serial connection
 from shared import easyserial
 
 # Create required Queues
 capt_cmd = queue.Queue()
 toLowerQ = queue.Queue()
+picLED = queue.Queue()
+cmdLED = queue.Queue()
 
 # Night mode affects the upper and lower, so we have an equivalent
 # flag here that should update at the same time.
 nightMode = threading.Event()
+tempLED = threading.Event()
 
 # Package arg tuples for thread
 
-capt_args = (toLowerQ,capt_cmd,nightMode) # Leave the comma! Comma makes it a tuple
-clnt_args = (toLowerQ,capt_cmd,nightMode)
+capt_args = (toLowerQ, capt_cmd, nightMode, picLED)
+clnt_args = (toLowerQ, capt_cmd, nightMode, tempLED, cmdLED)
+leds_args = (nightMode, tempLED, cmdLED, picLED)
 
 # Create thread objects
 threads = [
-    	threading.Thread(name='capt', target= capt.main, args=capt_args),
+    	threading.Thread(name='capt', target = capt.main, args=capt_args),
 	threading.Thread(name='clnt', target = clnt.main, args=clnt_args),
+        threading.Thread(name='leds', target = leds.main, args=leds_args),
 ]
 # Start running threads within a try-except block to allow for it to catch exceptions
 try:
