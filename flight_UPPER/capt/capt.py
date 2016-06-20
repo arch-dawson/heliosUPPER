@@ -38,9 +38,10 @@ class Cameras:
         self.current_count = 0
         self.queryTime = time.time()
         self.toLowerQ = toLowerQ
+        self.exposure = 1000
 
         # Setting up the science camera initial set-up.  If more settings are needed, change here.
-        init_cmd = "v4l2-ctl --set-ctrl=exposure_absolute=1000 --set-fmt-video=width=1600,height=1200,pixelformat='Y16 '"
+        init_cmd = "v4l2-ctl --set-ctrl=exposure_absolute={0} --set-fmt-video=width=1600,height=1200,pixelformat='Y16 '".format(self.exposure)
         Popen(shlex.split(init_cmd), stdout=PIPE).communicate()
 
         self.lock = threading.Lock()
@@ -93,8 +94,8 @@ class Cameras:
 
         return
         
-    def changeExposure(self, newExp):
-        cmd = "v4l2-ctl --set-ctrl=exposure_absolute={0} --set-fmt-video=width=1600,height=1200,pixelformat='Y16 '".format(newExp)
+    def changeExposure(self, expChange):
+        cmd = "v4l2-ctl --set-ctrl=exposure_absolute={0} --set-fmt-video=width=1600,height=1200,pixelformat='Y16 '".format(self.exposure + expChange)
         Popen(shlex.split(init_cmd), stdout=PIPE).communicate()
         
         return
@@ -124,6 +125,10 @@ def main(toLowerQ,capt_cmd, nightMode, picLED):
                 camera.downlinkData()
             elif expRe.search(cmd):
                 camera.exposureAnalysis()
+            elif expDRe.search(cmd):
+                camera.changeExposure(-50)
+            elif expURe.search(cmd):
+                camera.changeExposure(50)
         if not nightMode.is_set(): # If night mode isn't on
             if camera.science(): # Take a picture
                 picLED.put(True) # And send that fact to the LED thread
