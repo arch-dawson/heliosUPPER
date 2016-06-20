@@ -1,14 +1,14 @@
 #*******************************************************#
-#   COSGC Presents				        #					  #
+#   COSGC Presents                                      #                                         #
 #      __  __________    ________  _____   ___   __     #
 #     / / / / ____/ /   /  _/ __ \/ ___/   | |  / /     #
 #    / /_/ / __/ / /    / // / / /\__ \    | | / /      #
 #   / __  / /___/ /____/ // /_/ /___/ /    | |/ /       #
 #  /_/ /_/_____/_____/___/\____//____/     |___/        #
 #                                                       #
-#   						        #						  #
+#                                                       #                                                 #
 #  Copyright (c) 2016 University of Colorado Boulder    #
-#  COSGC HASP Helios V Team			        #
+#  COSGC HASP Helios V Team                             #
 #*******************************************************#
 
 
@@ -34,7 +34,7 @@ class LED:
 
         # Control signal. Queue for eventLED, event for constant, ironically
         self.signal = signal
-    
+
     def blink(self):
         """
         Only called at startup for now, makes a cool pattern
@@ -44,7 +44,7 @@ class LED:
         gpio.output(self.pinNum, GPIO.HIGH)
         time.sleep(1)
         gpio.output(self.pinNum, GPIO.LOW)
-        
+
 
 class constLED(LED):
     # LEDs that are expected to be on or off for long periods of time
@@ -61,7 +61,7 @@ class constLED(LED):
             gpio.output(self.pinNum, GPIO.LOW)
             time.sleep(timeOff)
         return
-        
+
 
 class eventLED(LED):
     def update(self):
@@ -79,7 +79,7 @@ def startUp(*LEDs):
 
 def updateLED(*LEDs):
     # I have mixed thoughts about fractally branching.
-    # I'm sure it's fine. Maybe. 
+    # I'm sure it's fine. Maybe.
     for LED in LEDs:
         threading.Timer(0,LED.update).start()
     threading.Timer(2.0, updateLED).start()
