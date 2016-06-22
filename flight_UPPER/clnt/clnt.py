@@ -76,28 +76,28 @@ class Client():
             out = str(os.popen("top -n1 | awk '/Cpu\(s\):/ {print $2}'").readline().strip())
             self.toLowerQ.put('     ' + out + "%")
         elif rebootRe.search(recieved): # Lower wants to kill us.  Watch out for that guy.
-            self.s.send('     Rebooting upper now'.encode())
+            self.s.send('RB'.encode())
             threading.Timer(5.0, self.restart).start()
         elif diskRe.search(recieved): # Lower checking disk usage.
             p=os.popen("df -h /")
             self.toLowerQ.put('\n' + p.readline() + p.readline())
         elif pingRe.search(recieved): # Lower making sure we're alive
-            self.toLowerQ.put('     RECIEVED COMMUNICATION')
+            self.toLowerQ.put('ACK')
         elif fasterRe.search(recieved): # Lower wants faster pictures
             self.capt_cmd.put(2)
-            self.toLowerQ.put("     Changed rate to 2")
+            self.toLowerQ.put("CamHz2")
         elif slowerRe.search(recieved): # Lower wants slower pictures
             self.capt_cmd.put(5)
-            self.toLowerQ.put("     Changed rate to 5")
+            self.toLowerQ.put("CamHz5")
         elif imageRe.search(recieved): # Lower is checking up on pictures
             self.capt_cmd.put('images')
         elif nightRe.search(received): # Toggles night mode
             if self.nightMode.is_set():
                 self.nightMode.clear()
-                self.toLowerQ.put("     Turned Upper Pi night mode OFF")
+                self.toLowerQ.put("NMOFF)
             else:
                 self.nightMode.set()
-                self.toLowerQ.put("     Turned Upper Pi night mode ON")
+                self.toLowerQ.put("NMON")
         elif fireRe.search(received): # If the lower Pi reports that >= 1 thing is on fire
             if not self.tempLED.is_set():
                 self.tempLED.set()
@@ -105,12 +105,12 @@ class Client():
             for i in range(3):
                 self.cmdLED.put(True)
         else: # Lower Pi sucks at communication
-            self.toLowerQ.put("     error")
+            self.toLowerQ.put("HUH?") # Normally I'd put "ER" for error, but serv uses that
         print("Recieved data: ", recieved)
 
     def heartBeat(self): # After clnt receives communication, send heartbeat back to confirm received
         # Contents of the message doesn't really matter.
-        self.toLowerQ.put("Heartbeat <3")
+        self.toLowerQ.put("HB")
 
     def flight(self):
         timer = 0 # Keep track of time since received last heartbeat
