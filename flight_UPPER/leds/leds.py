@@ -20,6 +20,27 @@ import RPi.GPIO as gpio
 gpio.setwarnings(False)
 gpio.setmode(gpio.BOARD)
 
+# Pin 37: Blue
+#   On can be anything
+#   Nightmode is an event
+# Pin 35: Red,
+#   Temp is an event
+#   Command is from queue
+# Pin 33: White,
+#   Picture taken is a queue
+
+
+class Pattern:
+    def __init__(self, timeOn, timeOff, signal, priority):
+        # Time on and time off define blink pattern
+        # Signal is queue of event
+        # Priority is boolean, will show priority signal if true
+
+    def querySignal(self):
+        # Return true if signal is true.
+        # Some signals are queues, others are events.
+        # TIME EVENT.IS_SET(), AND QUEUE.GET(), WHICH IS FASTER?
+
 class LED:
     def __init__(self, color, pinNum, timeOn, timeOff, signal):
         # Set up pin as output

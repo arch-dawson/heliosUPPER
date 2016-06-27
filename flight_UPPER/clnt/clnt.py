@@ -71,7 +71,7 @@ class Client():
     def command(self, received):
         if tempRe.search(recieved): # Lower wants Pi temperature
             output = os.popen('vcgencmd measure_temp').readline()
-            self.toLowerQ.put('     ' + output)
+            self.toLowerQ.put(output)
         elif cpuRe.search(recieved): # Lower wants Upper CPU usage
             out = str(os.popen("top -n1 | awk '/Cpu\(s\):/ {print $2}'").readline().strip())
             self.toLowerQ.put('     ' + out + "%")
