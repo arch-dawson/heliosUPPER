@@ -57,8 +57,8 @@ class Cameras:
 
     def downlinkData(self): # If lower Pi wants picture status.  Strings are pretty self-explanatory
         timeDiff = time.time() - self.queryTime
-        timeDiffStr = "Time since last query, (hh:mm:ss) = %d:%d:%d" % math.floor(timeDiff/3600), math.floor((timeDiff%3600)/60), math.floor(timeDiff%60)
-        outStr = "Flight pictures: %d\n %s \n Pictures since last Query: %d" % self.flight_count, timeDiffStr, self.current_count
+        timeDiffStr = "Session, (hh:mm:ss) = %d:%d:%d" % math.floor(timeDiff/3600), math.floor((timeDiff%3600)/60), math.floor(timeDiff%60)
+        outStr = "Total: %d\n %s \n Session: %d" % self.flight_count, timeDiffStr, self.current_count
         self.current_count = 0
         self.toLowerQ.put(outStr)
 

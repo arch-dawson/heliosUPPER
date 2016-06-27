@@ -68,19 +68,25 @@ class Client():
         # Closes connection.  Pi is dying anyway, but we might as well kill it gently.
         self.s.close()
 
+    def diskParse(self, line):
+        # Make the line for disk usage less long
+        resList = re.findall(r'\d{2,3}', line)
+        return resList[3] + '% Disk Used'
+
     def command(self, received):
         if tempRe.search(recieved): # Lower wants Pi temperature
             output = os.popen('vcgencmd measure_temp').readline()
             self.toLowerQ.put(output)
         elif cpuRe.search(recieved): # Lower wants Upper CPU usage
             out = str(os.popen("top -n1 | awk '/Cpu\(s\):/ {print $2}'").readline().strip())
-            self.toLowerQ.put('     ' + out + "%")
+            self.toLowerQ.put(out + "%")
         elif rebootRe.search(recieved): # Lower wants to kill us.  Watch out for that guy.
             self.s.send('RB'.encode())
             threading.Timer(5.0, self.restart).start()
         elif diskRe.search(recieved): # Lower checking disk usage.
             p=os.popen("df -h /")
-            self.toLowerQ.put('\n' + p.readline() + p.readline())
+            line = p.readline() + p.readline()
+            self.toLowerQ.put(self.diskParse(line))
         elif pingRe.search(recieved): # Lower making sure we're alive
             self.toLowerQ.put('ACK')
         elif fasterRe.search(recieved): # Lower wants faster pictures
@@ -94,7 +100,7 @@ class Client():
         elif nightRe.search(received): # Toggles night mode
             if self.nightMode.is_set():
                 self.nightMode.clear()
-                self.toLowerQ.put("NMOFF)
+                self.toLowerQ.put("NMOFF")
             else:
                 self.nightMode.set()
                 self.toLowerQ.put("NMON")
