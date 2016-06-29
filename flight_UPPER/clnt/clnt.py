@@ -35,25 +35,40 @@ imageRe = re.compile('image')
 nightRe = re.compile('night')
 
 class Client():
-        def __init__(self, toLowerQ, capt_cmd, nightMode):
-                self.toLowerQ = toLowerQ
-                self.capt_cmd = capt_cmd
-                self.nightMode = nightMode
-                self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	def __init__(self, toLowerQ, capt_cmd, nightMode):
+		self.toLowerQ = toLowerQ
+		self.capt_cmd = capt_cmd
+		self.nightMode = nightMode
+		self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        def connect(self):
-                print("Trying to connect to Lover Pi")
-                self.s.connect((TCP_IP, TCP_PORT))
-                self.toLowerQ.put("CU HE BL BU CLNT")
+		self.connect()
+		
+		self.flight()
 
-        def restart(self):
-                command = "/usr/bin/sudo /sbin/shutdown -r now"
-                process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
+	def connectCMD(self):
+		try:
+			self.s.connect((TCP_IP, TCP_PORT))
+		except:
+			return False
+		return True
 
-                self.s.close()
+	def connect(self):
+		print("Trying to connect to Lover Pi")
+		res = self.connectCMD()
+		while not res:
+			time.sleep(5)
+			res = self.connectCMD()
+		print("Successfully united with Lover")
+		return
 
-        def command(self, received):
-                if tempRe.search(recieved):
+	def restart(self):
+		command = "/usr/bin/sudo /sbin/shutdown -r now"
+		process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
+
+		self.s.close()
+
+	def command(self, received):
+		if tempRe.search(recieved):
 			output = os.popen('vcgencmd measure_temp').readline()
 			self.toLowerQ.put('     ' + output)
 		elif cpuRe.search(recieved):
@@ -76,39 +91,44 @@ class Client():
 		elif imageRe.search(recieved):
 			self.capt_cmd.put('images')
 		elif nightRe.search(received): # Toggles night mode
-                        if self.nightMode.is_set():
-                                self.nightMode.clear()
-                                self.toLowerQ.put("     Turned Upper Pi night mode OFF")
-                        else:
-                                self.nightMode.set()
-                                self.toLowerQ.put("     Turned Upper Pi night mode ON")
+			if self.nightMode.is_set():
+				self.nightMode.clear()
+				self.toLowerQ.put("     Turned Upper Pi night mode OFF")
+			else:
+				self.nightMode.set()
+				self.toLowerQ.put("     Turned Upper Pi night mode ON")
 		else:
 			self.toLowerQ.put("     error")
 		print("Recieved data: ", recieved)
 
 	def heartBeat(self):
-                self.toLowerQ.put("Heartbeat <3")
+		self.toLowerQ.put("Heartbeat <3")
 
-        def flight(self):
-                timer = 0 # Keep track of time since received last heartbeat
-                while True:
-                        data = self.s.recv(BUFFER_SIZE).decode()
-                        data = data.lower() # All lower case
-                        if len(data) > 0:
-                                inputQ.put(data)
-                                self.heartBeat()
-                                timer = 0
-                        else:
-                                time.sleep(1)
-                                timer += 1
-                                if timer > 15: # Haven't gotten a heartbeat!
-                                        self.connect()
-                        if not inputQ.empty():
-                                received = inputQ.get()
-                        while not self.toLowerQ.empty()
-                                message = self.toLowerQ.get()
-                                self.s.send(message.encode())
+	def flight(self):
+		timer = 0 # Keep track of time since received last heartbeat
+		while True:
+			try: # Can crash thread if receive fails
+				data = self.s.recv(BUFFER_SIZE).decode()
+			except:
+				timer = 0
+				self.connect()
+			data = data.lower() # All lower case
+			if len(data) > 0:
+				inputQ.put(data)
+				self.heartBeat()
+				timer = 0
+			else:
+				time.sleep(1)
+				timer += 1
+				if timer > 15: # Haven't gotten a heartbeat!
+					self.connect()
+			if not inputQ.empty():
+				received = inputQ.get()
+			while not self.toLowerQ.empty():
+				message = self.toLowerQ.get()
+				print("Sending message to Lover Pi")
+				self.s.send(message.encode())
                         
 
 def main(toLowerQ,capt_cmd, nightMode):
-        connection = Client(toLowerQ,capt_cmd, nightMode)
+	connection = Client(toLowerQ,capt_cmd, nightMode)
