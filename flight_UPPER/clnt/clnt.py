@@ -36,6 +36,7 @@ imageRe = re.compile('image')
 nightRe = re.compile('night')
 fireRe = re.compile('fire')
 cmdRe = re.compile('command')
+expRe = re.compile('exposure')
 
 """
 This was written so that the Pis are constantly communicating with each other.
@@ -110,6 +111,8 @@ class Client():
         elif cmdRe.search(received) # If the lower pi received a command
             for i in range(3):
                 self.cmdLED.put(True)
+        elif expRe.search(received)
+            self.capt_cmd.put('exposure')
         else: # Lower Pi sucks at communication
             self.toLowerQ.put("HUH?") # Normally I'd put "ER" for error, but serv uses that
         print("Recieved data: ", recieved)
