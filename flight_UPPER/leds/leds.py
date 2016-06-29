@@ -1,6 +1,6 @@
 #*******************************************************#
 #   COSGC Presents                                      #                                         #
-#      __  __________    ________  _____   ___   __     #
+#      __  __________    ________  _____    __   __     #
 #     / / / / ____/ /   /  _/ __ \/ ___/   | |  / /     #
 #    / /_/ / __/ / /    / // / / /\__ \    | | / /      #
 #   / __  / /___/ /____/ // /_/ /___/ /    | |/ /       #
@@ -20,20 +20,63 @@ import RPi.GPIO as gpio
 gpio.setwarnings(False)
 gpio.setmode(gpio.BOARD)
 
-class LED:
-    def __init__(self, color, pinNum, timeOn, timeOff, signal):
-        # Set up pin as output
-        gpio.setup(pinNum, gpio.OUT)
-        self.pinNum = pinNum
+# Pin 37: Blue
+#   On can be anything
+#   Nightmode is an event
+# Pin 35: Red,
+#   Temp is an event
+#   Command is from queue
+# Pin 33: White,
+#   Picture taken is a queue
 
-        self.color = color
+
+class Pattern:
+    def __init__(self, timeOn, timeOff, signal, priority, ledQ):
+        # Time on and time off define blink pattern
+        # Signal is queue of event
+        # Priority is boolean, will show priority signal if true
 
         # Defines how the flashes should cycle
         self.timeOn = timeOn
         self.timeOff = timeOff
 
+        self.ledQ = ledQ
+
         # Control signal. Queue for eventLED, event for constant, ironically
         self.signal = signal
+
+    def flight(self):
+        while True:
+            if self.querySignal():
+                self.ledQ.put((priority, (self.timeOn, self.timeOff)))
+
+class eventPattern(Pattern):
+    def querySignal(self, controlQ):
+        if self.signal.is_set():
+            self.ledQ.put((priority, (self.timeOn, self.timeOff)))
+        return
+
+class queuePattern(Pattern):
+    def querySignal(self, controlQ):
+        if not self.signal.empty():
+            self.signal.get()
+            self.ledQ.put((priority, (self.timeOn, self.timeOff)))
+        return
+
+        
+
+class LED:
+    def __init__(self, color, pinNum, patterns):
+        # Set up pin as output
+        gpio.setup(pinNum, gpio.OUT)
+        self.pinNum = pinNum
+        self.color = color
+
+        self.patterns = patterns
+
+        self.controlQ = queue.PriorityQueue()
+        
+        return
 
     def blink(self):
         """
@@ -44,45 +87,28 @@ class LED:
         gpio.output(self.pinNum, GPIO.HIGH)
         time.sleep(1)
         gpio.output(self.pinNum, GPIO.LOW)
-
-
-class constLED(LED):
-    # LEDs that are expected to be on or off for long periods of time
-    # "On" light, night mode, etc.
-    def update(self):
-        if self.signal.is_set():
-            self.loop()
-
-    def loop(self):
-        # Uses a cycle of two seconds
-        for i in range(2/(self.timeOn+self.timeOff)):
-            gpio.output(self.pinNum, GPIO.HIGH)
-            time.sleep(timeOn)
-            gpio.output(self.pinNum, GPIO.LOW)
-            time.sleep(timeOff)
         return
 
+    def light(self, timeOn, timeOff):
+        gpio.output(self.pinNum, GPIO.HIGH)
+        time.sleep(timeOn)
+        gpio.outout(self.pinNum, GPIO.LOW)
+        time.sleep(timeOff)
+        return
+        
 
-class eventLED(LED):
-    def update(self):
-        # Checks the queue
-        while not signal.empty():
-            signal.get()
-            gpio.output(self.numPin,GPIO.HIGH)
-            time.sleep(self.timeOn)
-            gpio.output(self.pinNum,GPIO.LOW)
-            time.sleep(self.timeOff)
+    def flight(self):
+        while True:
+            for pattern in patterns:
+                pattern.queryPattern()
 
-def startUp(*LEDs):
+            while not self.controlQ.empty():
+                val = self.controlQ.get()
+                light(*val[1])
+        
+def startUp(LEDs):
     for LED, i in zip(LEDs, range(len(LEDs))):
         threading.Timer((i/10),LED.blink).start()
-
-def updateLED(*LEDs):
-    # I have mixed thoughts about fractally branching.
-    # I'm sure it's fine. Maybe.
-    for LED in LEDs:
-        threading.Timer(0,LED.update).start()
-    threading.Timer(2.0, updateLED).start()
 
 def main(nightMode, tempLED, cmdLED, picLED):
 
@@ -92,15 +118,24 @@ def main(nightMode, tempLED, cmdLED, picLED):
     # Unanimously decided test case for this would rarely be used
 
     LEDs = [
-        constLED('red', 29, 1/8, 1/8, tempLED),
-        constLED('blue', 37, 1, 1, nightMode),
-        constLED('green', 33, 1, 1, on),
-        eventLED('yellow', 31, 1/2, 1, cmdLED),
-        eventLED('white', 35, 1/4, 0, picLED),
+        blueLED('blue', 37, (on, nightMode)),
+        redLED('red', 35, (tempLED, cmdLED)),
+        whiteLED('white', 33, (picLED,)), # Leave derpy comma
+        ]
+
+    patterns = [
+        # (timeOn, timeOff, signal, priority)
+        eventPattern(1/8, 1/8, tempLED, 1), 
+        eventPattern(1, 1, nightMode, 1),
+        eventPattern(1, 2, on, 2),
+        queuePattern(1/2, 1, cmdLED, 2),
+        queuePattern(1/4, 0, picLED, 2),
         ]
 
     # Pretty little light display
-    startUp(*LEDs)
-
-    # Update all the values for the first time, will keep itself running
-    updateLED(*LEDs)
+    startUp(LEDs)
+    
+    # Setting up threads
+    threading.Thread(target=blueLED.flight).start()
+    threading.Thread(target=whiteLED.flight).start()
+    threading.Thread(target=redLED.flight).start()

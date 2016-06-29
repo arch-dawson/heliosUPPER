@@ -36,6 +36,7 @@ imageRe = re.compile('image')
 nightRe = re.compile('night')
 fireRe = re.compile('fire')
 cmdRe = re.compile('command')
+expRe = re.compile('exposure')
 
 """
 This was written so that the Pis are constantly communicating with each other.
@@ -68,19 +69,25 @@ class Client():
         # Closes connection.  Pi is dying anyway, but we might as well kill it gently.
         self.s.close()
 
+    def diskParse(self, line):
+        # Make the line for disk usage less long
+        resList = re.findall(r'\d{2,3}', line)
+        return resList[3] + '% Disk Used'
+
     def command(self, received):
         if tempRe.search(recieved): # Lower wants Pi temperature
             output = os.popen('vcgencmd measure_temp').readline()
-            self.toLowerQ.put('     ' + output)
+            self.toLowerQ.put(output)
         elif cpuRe.search(recieved): # Lower wants Upper CPU usage
             out = str(os.popen("top -n1 | awk '/Cpu\(s\):/ {print $2}'").readline().strip())
-            self.toLowerQ.put('     ' + out + "%")
+            self.toLowerQ.put(out + "%")
         elif rebootRe.search(recieved): # Lower wants to kill us.  Watch out for that guy.
             self.s.send('RB'.encode())
             threading.Timer(5.0, self.restart).start()
         elif diskRe.search(recieved): # Lower checking disk usage.
             p=os.popen("df -h /")
-            self.toLowerQ.put('\n' + p.readline() + p.readline())
+            line = p.readline() + p.readline()
+            self.toLowerQ.put(self.diskParse(line))
         elif pingRe.search(recieved): # Lower making sure we're alive
             self.toLowerQ.put('ACK')
         elif fasterRe.search(recieved): # Lower wants faster pictures
@@ -94,7 +101,7 @@ class Client():
         elif nightRe.search(received): # Toggles night mode
             if self.nightMode.is_set():
                 self.nightMode.clear()
-                self.toLowerQ.put("NMOFF)
+                self.toLowerQ.put("NMOFF")
             else:
                 self.nightMode.set()
                 self.toLowerQ.put("NMON")
@@ -104,6 +111,8 @@ class Client():
         elif cmdRe.search(received) # If the lower pi received a command
             for i in range(3):
                 self.cmdLED.put(True)
+        elif expRe.search(received)
+            self.capt_cmd.put('exposure')
         else: # Lower Pi sucks at communication
             self.toLowerQ.put("HUH?") # Normally I'd put "ER" for error, but serv uses that
         print("Recieved data: ", recieved)
