@@ -108,10 +108,10 @@ class Client():
         elif fireRe.search(received): # If the lower Pi reports that >= 1 thing is on fire
             if not self.tempLED.is_set():
                 self.tempLED.set()
-        elif cmdRe.search(received) # If the lower pi received a command
+        elif cmdRe.search(received): # If the lower pi received a command
             for i in range(3):
                 self.cmdLED.put(True)
-        elif expRe.search(received)
+        elif expRe.search(received):
             self.capt_cmd.put('exposure')
         else: # Lower Pi sucks at communication
             self.toLowerQ.put("HUH?") # Normally I'd put "ER" for error, but serv uses that
@@ -138,7 +138,7 @@ class Client():
             while not inputQ.empty(): # If we have things to be parsed
                 received = inputQ.get() # Pop off the queue
                 self.command(received) # Send them to the command parser
-            while not self.toLowerQ.empty() # If things need to be sent to lower
+            while not self.toLowerQ.empty(): # If things need to be sent to lower
                 message = self.toLowerQ.get() # Get the thing off the queue
                 self.s.send(message.encode()) # And send it to the lower, encoded as bytes
 

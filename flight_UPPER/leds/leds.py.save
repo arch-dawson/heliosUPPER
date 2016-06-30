@@ -45,41 +45,38 @@ class Pattern:
         # Control signal. Queue for eventLED, event for constant, ironically
         self.signal = signal
 
-        self.priority = priority
-
     def flight(self):
         while True:
             if self.querySignal():
-                self.ledQ.put((self.priority, (self.timeOn, self.timeOff)))
+                self.ledQ.put((priority, (self.timeOn, self.timeOff)))
 
 class eventPattern(Pattern):
-    def querySignal(self):
+    def querySignal(self, controlQ):
         if self.signal.is_set():
-            self.ledQ.put((self.priority, (self.timeOn, self.timeOff)))
+            self.ledQ.put((priority, (self.timeOn, self.timeOff)))
         return
 
 class queuePattern(Pattern):
-    def querySignal(self):
+    def querySignal(self, controlQ):
         if not self.signal.empty():
             self.signal.get()
-            self.ledQ.put((self.priority, (self.timeOn, self.timeOff)))
+            self.ledQ.put((priority, (self.timeOn, self.timeOff)))
         return
 
         
 
 class LED:
-    def __init__(self, color, pinNum):
+    def __init__(self, color, pinNum, patterns):
         # Set up pin as output
         gpio.setup(pinNum, gpio.OUT)
         self.pinNum = pinNum
         self.color = color
 
+        self.patterns = patterns
+
         self.controlQ = queue.PriorityQueue()
         
         return
-
-    def setPatterns(self, patterns): # Both rely on each other, need this circular definition
-        self.patterns = patterns
 
     def blink(self):
         """
@@ -87,27 +84,27 @@ class LED:
         Make sure the LEDs are defined in main in the same
         order that they're physically placed, or it'll look weird
         """
-        gpio.output(self.pinNum, gpio.HIGH)
+        gpio.output(self.pinNum, GPIO.HIGH)
         time.sleep(1)
-        gpio.output(self.pinNum, gpio.LOW)
+        gpio.output(self.pinNum, GPIO.LOW)
         return
 
     def light(self, timeOn, timeOff):
-        gpio.output(self.pinNum, gpio.HIGH)
+        gpio.output(self.pinNum, GPIO.HIGH)
         time.sleep(timeOn)
-        gpio.output(self.pinNum, gpio.LOW)
+        gpio.outout(self.pinNum, GPIO.LOW)
         time.sleep(timeOff)
         return
         
 
     def flight(self):
         while True:
-            for pattern in self.patterns:
-                pattern.querySignal()
+            for pattern in patterns:
+                pattern.queryPattern()
 
             while not self.controlQ.empty():
                 val = self.controlQ.get()
-                self.light(*val[1])
+                light(*val[1])
         
 def startUp(LEDs):
     for LED, i in zip(LEDs, range(len(LEDs))):
@@ -120,24 +117,25 @@ def main(nightMode, tempLED, cmdLED, picLED):
     # Sets "On" event LED to being true.
     # Unanimously decided test case for this would rarely be used
 
-    blueLED = LED('blue', 37)
-    redLED = LED('red', 35)
-    whiteLED = LED('white', 33)
+    LEDs = [
+        blueLED = LED('blue', 37, (on, nightMode)),
+        redLED = LED('red', 35, (tempLED, cmdLED)),
+        whiteLED = LED('white', 33, (picLED,)), # Leave derpy comma
+]
 
-    tempPattern = eventPattern(1/8, 1/8, tempLED, 1, redLED.controlQ)
-    nightPattern = eventPattern(1, 1, nightMode, 1, blueLED.controlQ)
-    onPattern = eventPattern(1, 2, on, 2, blueLED.controlQ)
-    cmdPattern = queuePattern(1/2, 1, cmdLED, 2, redLED.controlQ)
-    picPattern = queuePattern(1/4, 0, picLED, 2, whiteLED.controlQ)
-
-    blueLED.setPatterns((onPattern, nightPattern))
-    redLED.setPatterns((tempPattern, cmdPattern))
-    whiteLED.setPatterns((picPattern,))  # Leave weird comma
+    patterns = [
+        # (timeOn, timeOff, signal, priority)
+        eventPattern(1/8, 1/8, tempLED, 1), 
+        eventPattern(1, 1, nightMode, 1),
+        eventPattern(1, 2, on, 2),
+        queuePattern(1/2, 1, cmdLED, 2),
+        queuePattern(1/4, 0, picLED, 2),
+        ]
 
     # Pretty little light display
-    startUp((blueLED, redLED, whiteLED))
+    startUp(LEDs)
     
-    # Setting up threads 
+    # Setting up threads
     threading.Thread(target=blueLED.flight).start()
     threading.Thread(target=whiteLED.flight).start()
     threading.Thread(target=redLED.flight).start()

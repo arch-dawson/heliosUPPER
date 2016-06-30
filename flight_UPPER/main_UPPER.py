@@ -25,6 +25,7 @@ def shutdown():
 # Import code for threading. All flight code must be initialized from the main function in the thread file
 from capt import capt
 from clnt import clnt
+from leds import leds
 
 # Directory for all code shared between threads
 # Not actually used in all threads though, just in clnt to run serial connection
