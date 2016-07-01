@@ -37,7 +37,7 @@ nightRe = re.compile('night')
 fireRe = re.compile('fire')
 cmdRe = re.compile('command')
 expRe = re.compile('exposure')
-
+heartRe = re.compile('heartbeat')
 """
 This was written so that the Pis are constantly communicating with each other.
 Might be overkill, but it worked well for having the LEDs function.
@@ -56,10 +56,24 @@ class Client():
         self.cmdLED = cmdLED # Whenever a command has been received by lower
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    def connect(self):
+    def runConnect(self):
         print("Trying to connect to Lover Pi") # Not a typo, the Pis are in love
-        self.s.connect((TCP_IP, TCP_PORT)) # Thread halts here waiting for connection
-        self.toLowerQ.put("CU HE BL BU CLNT")
+        try:
+            connectRes = self.connect()
+        except:
+            connectRes = False
+        while not connectRes:
+            try:
+                connectRes = self.connect()
+            except:
+                connectRes = False
+        print("Successfully connected")
+        self.toLowerQ.put("BL BU CLNT")
+        return
+
+    def connect(self):
+        self.s.connect((TCP_IP, TCP_PORT)) # Actually try connecting
+        return True
 
     def restart(self):
         # Sends reboot command
@@ -75,28 +89,29 @@ class Client():
         return resList[3] + '% Disk Used'
 
     def command(self, received):
-        if tempRe.search(recieved): # Lower wants Pi temperature
+        #print("Received: ", received)
+        if tempRe.search(received): # Lower wants Pi temperature
             output = os.popen('vcgencmd measure_temp').readline()
             self.toLowerQ.put(output)
-        elif cpuRe.search(recieved): # Lower wants Upper CPU usage
+        elif cpuRe.search(received): # Lower wants Upper CPU usage
             out = str(os.popen("top -n1 | awk '/Cpu\(s\):/ {print $2}'").readline().strip())
             self.toLowerQ.put(out + "%")
-        elif rebootRe.search(recieved): # Lower wants to kill us.  Watch out for that guy.
+        elif rebootRe.search(received): # Lower wants to kill us.  Watch out for that guy.
             self.s.send('RB'.encode())
             threading.Timer(5.0, self.restart).start()
-        elif diskRe.search(recieved): # Lower checking disk usage.
+        elif diskRe.search(received): # Lower checking disk usage.
             p=os.popen("df -h /")
             line = p.readline() + p.readline()
             self.toLowerQ.put(self.diskParse(line))
-        elif pingRe.search(recieved): # Lower making sure we're alive
+        elif pingRe.search(received): # Lower making sure we're alive
             self.toLowerQ.put('ACK')
-        elif fasterRe.search(recieved): # Lower wants faster pictures
+        elif fasterRe.search(received): # Lower wants faster pictures
             self.capt_cmd.put(2)
             self.toLowerQ.put("CamHz2")
-        elif slowerRe.search(recieved): # Lower wants slower pictures
+        elif slowerRe.search(received): # Lower wants slower pictures
             self.capt_cmd.put(5)
             self.toLowerQ.put("CamHz5")
-        elif imageRe.search(recieved): # Lower is checking up on pictures
+        elif imageRe.search(received): # Lower is checking up on pictures
             self.capt_cmd.put('images')
         elif nightRe.search(received): # Toggles night mode
             if self.nightMode.is_set():
@@ -113,13 +128,15 @@ class Client():
                 self.cmdLED.put(True)
         elif expRe.search(received):
             self.capt_cmd.put('exposure')
+        elif heartRe.search(received):
+            self.toLowerQ.put("HB")
         else: # Lower Pi sucks at communication
             self.toLowerQ.put("HUH?") # Normally I'd put "ER" for error, but serv uses that
-        print("Recieved data: ", recieved)
+        #print("Recieved data: ", received)
 
     def heartBeat(self): # After clnt receives communication, send heartbeat back to confirm received
         # Contents of the message doesn't really matter.
-        self.toLowerQ.put("HB")
+        self.toLowerQ.put("HB ")
 
     def flight(self):
         timer = 0 # Keep track of time since received last heartbeat
@@ -128,20 +145,30 @@ class Client():
             data = data.lower() # All lower case
             if len(data) > 0: # If there's something in the message...
                 inputQ.put(data) # Add to the queue to be parsed
-                self.heartBeat() # Confirm we got it
+                #self.heartBeat() # Confirm we got it
                 timer = 0 # Reset timer
             else:
                 time.sleep(1) # Be sad for a second
                 timer += 1 # Record sadness
                 if timer > 15: # Haven't gotten a heartbeat, should come every 5 seconds
-                    self.connect() # Try reconnecting
+                    break # Try reconnecting
             while not inputQ.empty(): # If we have things to be parsed
                 received = inputQ.get() # Pop off the queue
                 self.command(received) # Send them to the command parser
             while not self.toLowerQ.empty(): # If things need to be sent to lower
                 message = self.toLowerQ.get() # Get the thing off the queue
                 self.s.send(message.encode()) # And send it to the lower, encoded as bytes
+                print(message)
+        return # Want to break and return to main if there's a problem
 
 
 def main(toLowerQ,capt_cmd, nightMode, tempLED, cmdLED):
     connection = Client(toLowerQ,capt_cmd, nightMode, tempLED, cmdLED)
+    connection.runConnect()
+    connection.flight()
+    while True:
+        try:
+            connection.flight()
+            connection.runConnect()
+        except:
+            connection.runConnect()

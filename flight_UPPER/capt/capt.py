@@ -50,11 +50,11 @@ class Cameras:
         with self.lock: # Forget why this was important...
             subprocess.call(shlex.split(pic_cmd))
         # Comfirm that the picture was actually taken by checking the folder
-        result, err = Popen("ls /home/pi/heliosUPPER/flight_UPPER/capt/images/*.jpg | grep %s" % self.t, stdout=PIPE, shell=True).communicate()
+        result, err = Popen("ls /home/pi/heliosUPPER/flight_UPPER/capt/images/*.raw | grep %s" % self.t, stdout=PIPE, shell=True).communicate()
         if result:
             self.flight_count += 1
             self.current_count += 1
-            print("Took science picture with timestamp: " + t)
+            print("Took science picture with timestamp: " + self.t)
             return True
         return False
 
