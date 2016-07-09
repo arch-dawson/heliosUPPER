@@ -29,6 +29,8 @@ expRe = re.compile('exposure')
 expDRe = re.compile('expDown')
 expURe = re.compile('expUp')
 
+pixelVals = {x:0 for x in range(0,65536,12)}
+
 class Cameras:
     def __init__(self,toLowerQ):
         # Counts for picture query command
@@ -38,7 +40,7 @@ class Cameras:
         self.toLowerQ = toLowerQ
 
         # Setting up the science camera initial set-up.  If more settings are needed, change here.
-        init_cmd = "v4l2-ctl --set-fmt-video=width=1600,height=1200,pixelformat='Y16 '"
+        init_cmd = "v4l2-ctl --set-ctrl=exposure_absolute=1000 --set-fmt-video=width=1600,height=1200,pixelformat='Y16 '"
         Popen(shlex.split(init_cmd), stdout=PIPE).communicate()
 
         self.lock = threading.Lock()
@@ -59,22 +61,43 @@ class Cameras:
             print("Took science picture with timestamp: " + self.t)
             return True
         return False
+        
+    def mode(arr):
+        for item in arr:
+            pixelVals[item] += 1
+
+        max = 0
+        
+        for val in pixelVals.keys():
+            if pixelVals[val] > max:
+                max = pixelVals[val]
+                maxIndex = val
+        return maxIndex
 
     def exposureAnalysis(self):
         img = open('/home/pi/heliosUPPER/flight_UPPER/capt/images/SCI_' + self.t + '.raw','rb')
 
-        valArray = array.array('H') # H is code for unsigned short
+        valArray = array.array('H') # H is code for unsigned short. Obviously
 
         valArray.fromfile(img, 1200*1600)
 
         img.close()
 
         npArray = np.frombuffer(valArray, dtype='u2') # u2 says 2 byte unsigned
-
-        self.toLowerQ.put(np.mean(npArray))  # Fix this. Bad system. 
+        
+        npArray = np.sort(npArray)
+        
+        npArray = npArray[(len(npArray)//10):]
+        
+        self.toLowerQ.put(mode(npArray))  
 
         return
-
+        
+    def changeExposure(self, newExp):
+        cmd = "v4l2-ctl --set-ctrl=exposure_absolute={0} --set-fmt-video=width=1600,height=1200,pixelformat='Y16 '".format(newExp)
+        Popen(shlex.split(init_cmd), stdout=PIPE).communicate()
+        
+        return
 
     def downlinkData(self): # If lower Pi wants picture status.  Strings are pretty self-explanatory
         timeDiff = time.time() - self.queryTime
