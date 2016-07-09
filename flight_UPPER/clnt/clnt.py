@@ -37,6 +37,8 @@ nightRe = re.compile('night')
 fireRe = re.compile('fire')
 cmdRe = re.compile('command')
 expRe = re.compile('exposure')
+expDRe = re.compile('expDown')
+expURe = re.compile('expUp')
 heartRe = re.compile('heartbeat')
 """
 This was written so that the Pis are constantly communicating with each other.
@@ -128,6 +130,10 @@ class Client():
                 self.cmdLED.put(True)
         elif expRe.search(received):
             self.capt_cmd.put('exposure')
+        elif expDRe.search(received):
+            self.capt_cmd.put('expDown')
+        elif expURe.search(received):
+            self.capt_cmd.put('expUp')
         elif heartRe.search(received):
             self.toLowerQ.put("HB")
         else: # Lower Pi sucks at communication

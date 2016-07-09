@@ -26,6 +26,8 @@ import numpy as np
 
 imagesRe = re.compile('images')
 expRe = re.compile('exposure')
+expDRe = re.compile('expDown')
+expURe = re.compile('expUp')
 
 class Cameras:
     def __init__(self,toLowerQ):
