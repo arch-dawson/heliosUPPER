@@ -79,6 +79,7 @@ class Client():
 
     def restart(self):
         # Sends reboot command
+        print("Got reboot command")
         command = "/usr/bin/sudo /sbin/shutdown -r now"
         process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
 
@@ -90,8 +91,17 @@ class Client():
         resList = re.findall(r'\d{2,3}', line)
         return resList[3] + '% Disk Used'
 
+    def writeCMD(self):
+        self.cmdLED.put('First')
+        self.cmdLED.put('Second')
+        self.cmdLED.put('Third')
+        # Contents of queue don't matter
+        return
+
     def command(self, received):
-        #print("Received: ", received)
+        if not heartRe.search(received):
+            self.toLowerQ.put("HUH?")
+        self.toLowerQ.put("HB ")
         if tempRe.search(received): # Lower wants Pi temperature
             output = os.popen('vcgencmd measure_temp').readline()
             self.toLowerQ.put(output)
@@ -100,7 +110,8 @@ class Client():
             self.toLowerQ.put(out + "%")
         elif rebootRe.search(received): # Lower wants to kill us.  Watch out for that guy.
             self.s.send('RB'.encode())
-            threading.Timer(5.0, self.restart).start()
+            self.restart()
+            #threading.Timer(5.0, self.restart).start()
         elif diskRe.search(received): # Lower checking disk usage.
             p=os.popen("df -h /")
             line = p.readline() + p.readline()
@@ -126,19 +137,15 @@ class Client():
             if not self.tempLED.is_set():
                 self.tempLED.set()
         elif cmdRe.search(received): # If the lower pi received a command
-            for i in range(3):
-                self.cmdLED.put(True)
+            self.writeCMD()
         elif expRe.search(received):
             self.capt_cmd.put('exposure')
         elif expDRe.search(received):
             self.capt_cmd.put('expDown')
         elif expURe.search(received):
             self.capt_cmd.put('expUp')
-        elif heartRe.search(received):
-            self.toLowerQ.put("HB")
-        else: # Lower Pi sucks at communication
-            self.toLowerQ.put("HUH?") # Normally I'd put "ER" for error, but serv uses that
-        #print("Recieved data: ", received)
+        return
+            
 
     def heartBeat(self): # After clnt receives communication, send heartbeat back to confirm received
         # Contents of the message doesn't really matter.
