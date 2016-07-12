@@ -89,7 +89,7 @@ class Client():
     def diskParse(self, line):
         # Make the line for disk usage less long
         resList = re.findall(r'\d{2,3}', line)
-        return resList[3] + '%D'
+        return resList[3] + '% Disk Used'
 
     def writeCMD(self):
         self.cmdLED.put('First')
@@ -102,9 +102,19 @@ class Client():
         if not heartRe.search(received):
             self.toLowerQ.put("HUH?")
         self.heartBeat()
-        if rebootRe.search(received): # Lower wants to kill us.  Watch out for that guy.
+        if tempRe.search(received): # Lower wants Pi temperature
+            output = os.popen('vcgencmd measure_temp').readline()
+            self.toLowerQ.put(output)
+        elif cpuRe.search(received): # Lower wants Upper CPU usage
+            out = str(os.popen("top -n1 | awk '/Cpu\(s\):/ {print $2}'").readline().strip())
+            self.toLowerQ.put(out + "%")
+        elif rebootRe.search(received): # Lower wants to kill us.  Watch out for that guy.
             self.s.send('RB'.encode())
             self.restart()
+        elif diskRe.search(received): # Lower checking disk usage.
+            p=os.popen("df -h /")
+            line = p.readline() + p.readline()
+            self.toLowerQ.put(self.diskParse(line))
         elif pingRe.search(received): # Lower making sure we're alive
             self.toLowerQ.put('ACK')
         elif fasterRe.search(received): # Lower wants faster pictures
@@ -139,11 +149,7 @@ class Client():
     def heartBeat(self): # After clnt receives communication, send heartbeat back to confirm received
         # Contents of the message doesn't really matter.
         temp = os.popen('vcgencmd measure_temp').readline()
-        cpu = str(os.popen("top -n1 | awk '/Cpu\(s\):/ {print $2}'").readline().strip()) + '%'
-        p = os.popen("df -h /")
-        disk = self.diskParse(p.readline() + p.readline())
-        self.toLowerQ.put("HB " + temp + " " + cpu + " " disk)
-        return
+        self.toLowerQ.put("HB ")
 
     def flight(self):
         timer = 0 # Keep track of time since received last heartbeat
