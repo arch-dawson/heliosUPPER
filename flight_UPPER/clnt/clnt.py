@@ -91,6 +91,10 @@ class Client():
         resList = re.findall(r'\d{2,3}', line)
         return resList[3] + '%D'
 
+    def tempParse(self, line):\
+        resList = re.findall(r'\-?\d{1,3}\.\d\'C', line)
+        return resList[0]  
+
     def writeCMD(self):
         self.cmdLED.put('First')
         self.cmdLED.put('Second')
@@ -138,11 +142,11 @@ class Client():
 
     def heartBeat(self): # After clnt receives communication, send heartbeat back to confirm received
         # Contents of the message doesn't really matter.
-        temp = os.popen('vcgencmd measure_temp').readline()
+        temp = self.tempParse(os.popen('vcgencmd measure_temp').readline())
         cpu = str(os.popen("top -n1 | awk '/Cpu\(s\):/ {print $2}'").readline().strip()) + '%'
         p = os.popen("df -h /")
         disk = self.diskParse(p.readline() + p.readline())
-        self.toLowerQ.put("HB " + temp + " " + cpu + " " disk)
+        self.toLowerQ.put("HB " + temp + " " + cpu + " " + disk)
         return
 
     def flight(self):

@@ -50,7 +50,7 @@ class Cameras:
     def science(self): # Takes a science picture
         self.t = str(time.time())
         # Long command to actually take the picture
-        pic_cmd = "v4l2-ctl --stream-mmap=3 --stream-count=1 --stream-to=/home/pi/heliosUPPER/flight_UPPER/capt/images/SCI_" + self.t + "_" + self.exposure + ".raw"
+        pic_cmd = "v4l2-ctl --stream-mmap=3 --stream-count=1 --stream-to=/home/pi/heliosUPPER/flight_UPPER/capt/images/SCI_" + self.t + "_" + str(self.exposure) + ".raw"
 
         with self.lock: # Forget why this was important...
             subprocess.call(shlex.split(pic_cmd))
