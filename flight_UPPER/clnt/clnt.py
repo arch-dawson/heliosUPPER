@@ -25,11 +25,8 @@ BUFFER_SIZE=128
 inputQ = queue.Queue() # What clnt has received
 
 # Making all the regexs for parsing commands
-tempRe = re.compile('temp')
-cpuRe = re.compile('cpu')
 rebootRe = re.compile('reboot')
 pingRe = re.compile('ping')
-diskRe = re.compile('disk')
 fasterRe = re.compile('faster')
 slowerRe = re.compile('slower')
 imageRe = re.compile('image')
