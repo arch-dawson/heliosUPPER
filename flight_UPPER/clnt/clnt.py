@@ -85,10 +85,10 @@ class Client():
 
     def diskParse(self, line):
         # Make the line for disk usage less long
-        resList = re.findall(r'\d{2,3}', line)
+        resList = re.findall(r'\d{1,3}', line)
         return resList[3] + '%D'
 
-    def tempParse(self, line):\
+    def tempParse(self, line):
         resList = re.findall(r'\-?\d{1,3}\.\d\'C', line)
         return resList[0]  
 
@@ -134,6 +134,7 @@ class Client():
             self.capt_cmd.put('expDown')
         elif expURe.search(received):
             self.capt_cmd.put('expUp')
+	self.toLowerQ.put(';') # To demarcate where the end of HB message is
         return
             
 
