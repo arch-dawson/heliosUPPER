@@ -125,7 +125,7 @@ def main(nightMode, tempLED, cmdLED, picLED):
     whiteLED = LED('white', 33)
 
     tempPattern = eventPattern(1/8, 1/8, tempLED, 1, redLED.controlQ)
-    nightPattern = eventPattern(1, 1, nightMode, 1, blueLED.controlQ)
+    nightPattern = eventPattern(3, 3, nightMode, 1, blueLED.controlQ)
     onPattern = eventPattern(1, 2, on, 2, blueLED.controlQ)
     cmdPattern = queuePattern(1/2, 1, cmdLED, 2, redLED.controlQ)
     picPattern = queuePattern(1/4, 0, picLED, 2, whiteLED.controlQ)

@@ -134,7 +134,7 @@ class Client():
             self.capt_cmd.put('expDown')
         elif expURe.search(received):
             self.capt_cmd.put('expUp')
-	self.toLowerQ.put(';') # To demarcate where the end of HB message is
+        self.toLowerQ.put(';') # To demarcate where the end of HB message is
         return
             
 
