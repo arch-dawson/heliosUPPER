@@ -35,8 +35,7 @@ class Cameras:
     def __init__(self,toLowerQ):
         # Counts for picture query command
         self.flight_count = 0
-        self.current_count = 0
-        self.queryTime = time.time()
+        self.initTime = time.time()
         self.toLowerQ = toLowerQ
         self.exposure = 1000
 
@@ -58,7 +57,6 @@ class Cameras:
         result, err = Popen("ls /home/pi/heliosUPPER/flight_UPPER/capt/images/*.raw | grep %s" % self.t, stdout=PIPE, shell=True).communicate()
         if result:
             self.flight_count += 1
-            self.current_count += 1
             print("Took science picture with timestamp: " + self.t)
             return True
         return False
@@ -76,7 +74,7 @@ class Cameras:
         return maxIndex
 
     def exposureAnalysis(self):
-        img = open('/home/pi/heliosUPPER/flight_UPPER/capt/images/SCI_' + self.t + '.raw','rb')
+        img = open('/home/pi/heliosUPPER/flight_UPPER/capt/images/SCI_' + self.t + "_" + str(self.exposure) + '.raw','rb')
 
         valArray = array.array('H') # H is code for unsigned short. Obviously
 
@@ -90,7 +88,7 @@ class Cameras:
         
         npArray = npArray[(len(npArray)//10):]
         
-        self.toLowerQ.put(mode(npArray))  
+        self.toLowerQ.put(self.mode(npArray))  
 
         return
         
@@ -101,11 +99,10 @@ class Cameras:
         return
 
     def downlinkData(self): # If lower Pi wants picture status.  Strings are pretty self-explanatory
-        timeDiff = time.time() - self.queryTime
-        timeDiffStr = "Session, (hh:mm:ss) = %d:%d:%d" % math.floor(timeDiff/3600), math.floor((timeDiff%3600)/60), math.floor(timeDiff%60)
-        outStr = "Total: %d\n %s \n Session: %d" % self.flight_count, timeDiffStr, self.current_count
-        self.current_count = 0
+        timeDiff = time.time() - self.initTime
+        outStr = "{0} {1}".format(timeDiff, self.flight_count)
         self.toLowerQ.put(outStr)
+        return
 
 
 
