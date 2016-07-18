@@ -42,16 +42,20 @@ cmdLED = queue.Queue()
 nightMode = threading.Event()
 tempLED = threading.Event()
 
+# Setting up for updating bias on adcs
+biasVals = queue.Queue()
+biasLock = threading.Lock()
+
 # Package arg tuples for thread
 
-capt_args = (toLowerQ, capt_cmd, nightMode, picLED)
-clnt_args = (toLowerQ, capt_cmd, nightMode, tempLED, cmdLED)
+capt_args = (toLowerQ, capt_cmd, nightMode, picLED, biasVals)
+clnt_args = (toLowerQ, capt_cmd, nightMode, tempLED, cmdLED, biasVals)
 leds_args = (nightMode, tempLED, cmdLED, picLED)
 
 # Create thread objects
 threads = [
     	threading.Thread(name='capt', target = capt.main, args=capt_args),
-	threading.Thread(name='clnt', target = clnt.main, args=clnt_args),
+	    threading.Thread(name='clnt', target = clnt.main, args=clnt_args),
         threading.Thread(name='leds', target = leds.main, args=leds_args),
 ]
 # Start running threads within a try-except block to allow for it to catch exceptions

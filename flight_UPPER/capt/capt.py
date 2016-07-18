@@ -32,11 +32,12 @@ expURe = re.compile('expUp')
 pixelVals = {x:0 for x in range(0,65536,12)}
 
 class Cameras:
-    def __init__(self,toLowerQ):
+    def __init__(self,toLowerQ, biasVals):
         # Counts for picture query command
         self.flight_count = 0
         self.initTime = time.time()
         self.toLowerQ = toLowerQ
+        self.biasVals = biasVals
         self.exposure = 1000
 
         # Setting up the science camera initial set-up.  If more settings are needed, change here.
@@ -103,12 +104,49 @@ class Cameras:
         outStr = "{0} {1}".format(timeDiff, self.flight_count)
         self.toLowerQ.put(outStr)
         return
+        
+    def updateBias(self):
+        img = open('/home/pi/heliosUPPER/flight_UPPER/capt/images/SCI_' + self.t + "_" + str(self.exposure) + '.raw','rb')
+
+        valArray = array.array('H') # H is code for unsigned short. Obviously
+
+        valArray.fromfile(img, 1200*1600)
+
+        img.close()
+        
+        npArray = np.frombuffer(valArray, dtype='u2') # u2 says 2 byte unsigned
+        
+        npArray.reshape(1200,1600)
+        
+        xSum = 0
+        ySum = 0
+        
+        # Summing up the edges of the array.
+        # Double counts corners but doesn't really matter
+        
+        for a in (0,1199):
+            for b in range(0,799):
+                xSum -= npArray[a,b]
+            for c in range(800,1599):
+                xSum += npArray[a,c]
+                
+        for a in (0,1599): # a is the column now
+            for b in range(0,599):
+                ySum += npArray[b,a]
+            for c in range(600,1199):
+                ySum -= npArray[c,a]
+        
+        xSum /= 5600
+        ySum /= 5600
+                
+        self.biasVals.put((xSum,ySum))
+        
+        return
 
 
-
-def main(toLowerQ,capt_cmd, nightMode, picLED):
+def main(toLowerQ,capt_cmd, nightMode, picLED, biasVals):
     print("Initializing Science Camera")
-    camera = Cameras(toLowerQ)
+    camera = Cameras(toLowerQ, biasVals)
 
     # Initialize initial photo capture rate
     capt_cmd.put(2)

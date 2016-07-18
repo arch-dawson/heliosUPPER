@@ -47,12 +47,13 @@ Or if you do put your credit card number on here, shoot me an email and I'll hav
 """
 
 class Client():
-    def __init__(self, toLowerQ, capt_cmd, nightMode, tempLED, cmdLED):
+    def __init__(self, toLowerQ, capt_cmd, nightMode, tempLED, cmdLED, biasVals):
         self.toLowerQ = toLowerQ # Things to send to lower
         self.capt_cmd = capt_cmd # Commands to the capt thread
         self.nightMode = nightMode # If night mode is on
         self.tempLED = tempLED # If any parts of HELIOS are on fire
         self.cmdLED = cmdLED # Whenever a command has been received by lower
+        self.biasVals = biasVals
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     def runConnect(self):
@@ -91,6 +92,12 @@ class Client():
     def tempParse(self, line):
         resList = re.findall(r'\-?\d{1,3}\.\d\'C', line)
         return resList[0]  
+        
+    def pullBias(self):
+        while not self.biasVals.empty():
+            bias = biasVals.get()
+        biasStr = '{:.2f}, {:.2f}'.format(bias[0], bias[1])
+        return biasStr
 
     def writeCMD(self):
         self.cmdLED.put('First')
@@ -140,11 +147,12 @@ class Client():
 
     def heartBeat(self): # After clnt receives communication, send heartbeat back to confirm received
         # Contents of the message doesn't really matter.
+        biasStr = self.pullBias()
         temp = self.tempParse(os.popen('vcgencmd measure_temp').readline())
         cpu = str(os.popen("top -n1 | awk '/Cpu\(s\):/ {print $2}'").readline().strip()) + '%'
         p = os.popen("df -h /")
         disk = self.diskParse(p.readline() + p.readline())
-        self.toLowerQ.put("HB " + temp + " " + cpu + " " + disk)
+        self.toLowerQ.put("HB " + biasStr + " " + temp + " " + cpu + " " + disk)
         return
 
     def flight(self):
@@ -171,8 +179,8 @@ class Client():
         return # Want to break and return to main if there's a problem
 
 
-def main(toLowerQ,capt_cmd, nightMode, tempLED, cmdLED):
-    connection = Client(toLowerQ,capt_cmd, nightMode, tempLED, cmdLED)
+def main(toLowerQ,capt_cmd, nightMode, tempLED, cmdLED, biasVals):
+    connection = Client(toLowerQ,capt_cmd, nightMode, tempLED, cmdLED, biasVals)
     connection.runConnect()
     connection.flight()
     while True:
