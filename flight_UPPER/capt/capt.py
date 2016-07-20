@@ -135,9 +135,10 @@ class Cameras:
                 ySum += npArray[b,a]
             for c in range(600,1199):
                 ySum -= npArray[c,a]
-        
-        xSum /= 5600
-        ySum /= 5600
+
+        # 22937600 = 5600 * 4096 = num edge pixels * 2**12
+        xSum /= 22937600
+        ySum /= 22937600
                 
         self.biasVals.put((xSum,ySum))
         

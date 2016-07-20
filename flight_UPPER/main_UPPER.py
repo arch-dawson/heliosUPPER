@@ -44,7 +44,6 @@ tempLED = threading.Event()
 
 # Setting up for updating bias on adcs
 biasVals = queue.Queue()
-biasLock = threading.Lock()
 
 # Package arg tuples for thread
 
