@@ -43,6 +43,8 @@ class Cameras:
         init_cmd = "v4l2-ctl --set-ctrl=exposure_absolute={0} --set-fmt-video=width=1600,height=1200,pixelformat='Y16 '".format(self.exposure)
         Popen(shlex.split(init_cmd), stdout=PIPE).communicate()
 
+        Popen(shlex.split('mkdir /home/pi/heliosUPPER/flight_UPPER/capt/images')).communicate() # Making sure directory exists
+
         self.lock = threading.Lock()
         print("Finished initializing science camera")
 
